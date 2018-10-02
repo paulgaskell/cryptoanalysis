@@ -1,0 +1,82 @@
+>>> for i in range(1, 10): print i, linregress(np.diff(s)[:-i], np.diff(s)[i:])
+
+1 LinregressResult(slope=-0.12346327538098048, intercept=-0.00052980075498387335, rvalue=-0.12346327538130013, pvalue=0.0, stderr=0.00078929351673707689)
+2 LinregressResult(slope=-0.077571313327772132, intercept=-0.00050734378286235008, rvalue=-0.077571365011611479, pvalue=0.0, stderr=0.0007929819358771348)
+3 LinregressResult(slope=-0.048471104233653223, intercept=-0.00049348218521543018, rvalue=-0.048471136135841274, pvalue=0.0, stderr=0.00079444392578539597)
+4 LinregressResult(slope=-0.033271240151379521, intercept=-0.0004863119461302325, rvalue=-0.033271262049485176, pvalue=0.0, stderr=0.00079493872360546713)
+5 LinregressResult(slope=-0.016882298097225048, intercept=-0.00047858074888039296, rvalue=-0.016882309208633681, pvalue=5.3815020382823258e-100, stderr=0.00079526597567053717)
+6 LinregressResult(slope=-0.015640360062900042, intercept=-0.00047948855887453283, rvalue=-0.015640401829743734, pvalue=4.2797426203456468e-86, stderr=0.00079528069179100663)
+7 LinregressResult(slope=-0.0093471870411354872, intercept=-0.00047652781700879479, rvalue=-0.0093472096868433985, pvalue=6.8861896059505842e-32, stderr=0.00079534368291128753)
+8 LinregressResult(slope=-0.0031091724351059754, intercept=-0.0004735853213190844, rvalue=-0.0031091799677909872, pvalue=9.2657653817305218e-05, stderr=0.00079537483702569176)
+9 LinregressResult(slope=-0.005549423648685812, intercept=-0.00047360719157519095, rvalue=-0.0055494441868190461, pvalue=3.0124295749555036e-12, stderr=0.00079536566896863106)
+>>> for i in range(1, 10): print i, linregress(np.diff(b)[:-i], np.diff(b)[i:])
+
+1 LinregressResult(slope=-0.15493507108351642, intercept=-0.00054340978944034948, rvalue=-0.15493507010302121, pvalue=0.0, stderr=0.00078577437837840656)
+2 LinregressResult(slope=-0.074428998911094585, intercept=-0.0005070782314917741, rvalue=-0.074429154771523329, pvalue=0.0, stderr=0.00079317129796600935)
+3 LinregressResult(slope=-0.044655879406871622, intercept=-0.00049308664894923116, rvalue=-0.044655968745186271, pvalue=0.0, stderr=0.00079458431005826604)
+4 LinregressResult(slope=-0.025844924768320798, intercept=-0.00048422305412592037, rvalue=-0.025844974066185557, pvalue=1.0905270635377845e-231, stderr=0.0007951123991660592)
+5 LinregressResult(slope=-0.017067383887747978, intercept=-0.00048009406468382354, rvalue=-0.017067416442902328, pvalue=3.7024874134297615e-102, stderr=0.00079526248258914446)
+6 LinregressResult(slope=-0.012238322268454059, intercept=-0.00047782252576467066, rvalue=-0.012238345612426028, pvalue=1.9897928952376294e-53, stderr=0.0007953190211792972)
+7 LinregressResult(slope=-0.0077430543412620925, intercept=-0.00047570807693609512, rvalue=-0.0077430691107409867, pvalue=2.1340515441539252e-22, stderr=0.00079535499587643727)
+8 LinregressResult(slope=-0.0050848873815954815, intercept=-0.00047419402474614214, rvalue=-0.0050848963188140908, pvalue=1.6258179441760199e-10, stderr=0.00079536892772712729)
+9 LinregressResult(slope=-0.0026282509104977015, intercept=-0.00047303742117668521, rvalue=-0.0026282555299223685, pvalue=0.00095178584692038703, stderr=0.0007953767149775201)
+
+
+X = np.array([s[i:-(10-i)]-b[10-i:-i] for i in range(1, 10)])
+
+W, tau, res = np.ones(50), [0], [[],[]]
+for i in range(55, len(b)):
+	fcst = np.mean(r[(i-52)+tau[-1]:i-1])
+	if (r[i] > 0 and fcst > 0) or (r[i] < 0  and fcst < 0):
+		res[0].append(1)
+	else:
+		res[0].append(0)
+	
+	print tau[-1], W[0], r[i], np.mean(res[0])
+	W += 0.0001
+	aves = [np.mean(r[(i-52)+j:i-1]) for j in range(50)]
+	dist = abs(r[i]-aves)
+	p = np.exp(-dist)
+	W = W*p
+	W = W/np.sum(W)
+	tau.append(np.argmax(W))
+
+	if i%10000==0:
+		break
+
+        
+for i in range(5001, 50000):
+	ma = np.mean(b[i-5000:i-1])
+	if ma < b[i-1]:
+		h.append(b[i])
+	else:
+		h.append(float('inf'))
+	if i%10000==0: print i
+   
+fig = figure(); ax = fig.add_subplot(111); ax.plot(h); ax.plot(b[5001:50000], alpha=0.1)
+   
+res = []  
+for tau in range(1000, 100000, 1000):
+	x = []
+	for i in range(tau, len(lp)):
+		g = lp[i]-lp[i-tau]
+		x.append(g)
+		if i%10000==0:
+			print i
+	x = { 'tau': tau, 'x': x } 
+	with open('C:\\Users\\Paul\\repos\\cryptoanalysis\\results.txt', 'a') as out:
+		out.write(json.dumps(x)+'\n')
+
+for lag in range(1000, 100000, 10):
+	for lead in range(1000, lag+1, 10):
+		x = [[],[]]
+		for i in range(lag, len(lp)-lead):
+			x[0].append(lp[i]-lp[i-lag])
+			x[1].append(lp[i+lead]-lp[i+1])
+			
+		T = np.sum(x[1])
+		for k in [0, 0.001, 0.01]:
+			xup = [x[1][i] for i in range(len(x[1])) if x[0][i] > k]
+			xdown = [x[1][i] for i in range(len(x[1])) if x[0][i] < -k]
+			print lag, lead, k, T,
+			print np.sum(xup), len(xup), np.sum(xdown), len(xdown)
