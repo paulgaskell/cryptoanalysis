@@ -3,7 +3,6 @@
 """
 
 from pylab import figure, show 
-from scipy.stats import linregress
 import numpy as np
 import datetime
 import json
